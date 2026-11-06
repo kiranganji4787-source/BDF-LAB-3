@@ -15,6 +15,41 @@ https://bdf-lab-3-production.up.railway.app
 https://github.com/kiranganji4787-source/BDF-LAB-3
 
 ---
+***screenshots 
+1)getallbooks
+<img width="1917" height="1017" alt="booknotfoundbyget" src="https://github.com/user-attachments/assets/38c3fb7f-c574-4b5e-8f97-dbcafda4f1d5" />
+
+2)getbyid
+<img width="1917" height="1035" alt="getbyid" src="https://github.com/user-attachments/assets/651a3c84-5c23-4208-9cbf-bbe722790d51" />
+
+3)addbookbypost
+<img width="1915" height="1025" alt="addbookbypost" src="https://github.com/user-attachments/assets/5ff2298e-e9ff-4144-a835-86b63bb2e0b1" />
+
+4)sorting asc
+<img width="1917" height="1022" alt="sorting asc" src="https://github.com/user-attachments/assets/8bf45cbf-b311-40ef-a8d0-4b335eba1e80" />
+
+5)offset
+<img width="1917" height="1035" alt="getbyid" src="https://github.com/user-attachments/assets/80c4467c-c016-4ee8-a088-b9d11b4cca18" />
+
+6)searchbyget
+<img width="1917" height="1020" alt="searchbyget" src="https://github.com/user-attachments/assets/8b61e6a9-164d-4fa7-911b-44bbc7ab148e" />
+
+7)booknotfound byget
+<img width="1917" height="1017" alt="booknotfoundbyget" src="https://github.com/user-attachments/assets/3c24493a-2583-4f9b-a05c-04ae9f0cb399" />
+
+8)delete
+<img width="1917" height="1017" alt="booknotfoundbyget" src="https://github.com/user-attachments/assets/8a2f4763-86e1-451c-9bbd-f58bb3e8e897" />
+
+9)delete not found
+<img width="1917" height="1017" alt="booknotfoundbyget" src="https://github.com/user-attachments/assets/4de5a866-54ac-4b43-9fbf-d67b6abe7ea3" />
+
+10)updatebyput
+<img width="1917" height="1022" alt="sorting asc" src="https://github.com/user-attachments/assets/83b26f10-fdaa-4282-ba89-c8db0d016dae" />
+
+11)putbynotfound
+<img width="1917" height="1022" alt="putbynotfound" src="https://github.com/user-attachments/assets/8ea22c00-7ac8-40ca-8f95-5bc715994cf9" />
+
+
 
 ## API Operations
 
