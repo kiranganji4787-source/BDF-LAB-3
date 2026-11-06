@@ -6,28 +6,48 @@ const { dbReady, run, get, all } = require("./db");
 
 const app = express();
 
+// Middleware
 app.use(express.json());
 
-// HOME ROUTE - DISPLAY ALL BOOKS
+// Validate book data
+function validateBook(title, author, price) {
+    if (
+        typeof title !== "string" ||
+        !title.trim() ||
+        typeof author !== "string" ||
+        !author.trim() ||
+        price === undefined ||
+        price === null ||
+        price === "" ||
+        !Number.isFinite(Number(price)) ||
+        Number(price) < 0
+    ) {
+        return false;
+    }
+
+    return true;
+}
+
+// GET / - Display all books
 app.get("/", async (req, res, next) => {
     try {
-        await dbReady;
-        const books = await all("SELECT * FROM books ORDER BY id ASC");
+        const books = await all("SELECT * FROM books");
         res.status(200).json(books);
     } catch (error) {
         next(error);
     }
 });
 
-// GET ALL BOOKS WITH SEARCH, SORTING, FILTERING AND PAGINATION
+// GET /books - Get all books with search, sorting and pagination
 app.get("/books", async (req, res, next) => {
     try {
         const {
             search_q,
+            title,
             order_by = "id",
             order = "ASC",
-            limit = "10",
-            offset = "0",
+            limit = 10,
+            offset = 0,
             min_price,
             max_price
         } = req.query;
@@ -36,15 +56,13 @@ app.get("/books", async (req, res, next) => {
 
         if (!allowedColumns.includes(order_by)) {
             return res.status(400).json({
-                message: "Invalid order_by value"
+                error: "Invalid sorting column"
             });
         }
 
-        const sortOrder = order.toUpperCase();
-
-        if (!["ASC", "DESC"].includes(sortOrder)) {
+        if (!["ASC", "DESC"].includes(order.toUpperCase())) {
             return res.status(400).json({
-                message: "Order must be ASC or DESC"
+                error: "Invalid sorting order"
             });
         }
 
@@ -53,86 +71,71 @@ app.get("/books", async (req, res, next) => {
 
         if (
             !Number.isInteger(pageLimit) ||
-            pageLimit <= 0 ||
+            pageLimit < 1 ||
             !Number.isInteger(pageOffset) ||
             pageOffset < 0
         ) {
             return res.status(400).json({
-                message: "Invalid limit or offset"
+                error: "Invalid limit or offset"
             });
         }
 
-        const conditions = [];
+        let sql = "SELECT * FROM books WHERE 1=1";
         const params = [];
 
-        if (search_q !== undefined) {
-            conditions.push("title LIKE ?");
-            params.push(`%${search_q}%`);
+        const search = search_q || title;
+
+        if (search) {
+            sql += " AND (title LIKE ? OR author LIKE ?)";
+            params.push(`%${search}%`, `%${search}%`);
         }
 
         if (min_price !== undefined) {
-            const min = Number(min_price);
-
-            if (!Number.isFinite(min) || min < 0) {
+            if (!Number.isFinite(Number(min_price))) {
                 return res.status(400).json({
-                    message: "Invalid minimum price"
+                    error: "Invalid minimum price"
                 });
             }
 
-            conditions.push("price >= ?");
-            params.push(min);
+            sql += " AND price >= ?";
+            params.push(Number(min_price));
         }
 
         if (max_price !== undefined) {
-            const max = Number(max_price);
-
-            if (!Number.isFinite(max) || max < 0) {
+            if (!Number.isFinite(Number(max_price))) {
                 return res.status(400).json({
-                    message: "Invalid maximum price"
+                    error: "Invalid maximum price"
                 });
             }
 
-            conditions.push("price <= ?");
-            params.push(max);
+            sql += " AND price <= ?";
+            params.push(Number(max_price));
         }
 
-        if (
-            min_price !== undefined &&
-            max_price !== undefined &&
-            Number(min_price) > Number(max_price)
-        ) {
-            return res.status(400).json({
-                message: "Minimum price cannot exceed maximum price"
-            });
-        }
-
-        let sql = "SELECT * FROM books";
-
-        if (conditions.length > 0) {
-            sql += " WHERE " + conditions.join(" AND ");
-        }
-
-        sql += ` ORDER BY ${order_by} ${sortOrder} LIMIT ? OFFSET ?`;
+        sql += ` ORDER BY ${order_by} ${order.toUpperCase()}`;
+        sql += " LIMIT ? OFFSET ?";
 
         params.push(pageLimit, pageOffset);
 
         const books = await all(sql, params);
 
-        res.status(200).json(books);
-
+        res.status(200).json({
+            count: books.length,
+            books
+        });
     } catch (error) {
         next(error);
     }
 });
 
-// GET BOOK BY ID
+// GET /books/:id - Get book by ID
 app.get("/books/:id", async (req, res, next) => {
     try {
         const id = Number(req.params.id);
 
         if (!Number.isInteger(id) || id <= 0) {
             return res.status(400).json({
-                message: "Invalid book ID"
+                error: "Invalid book ID"
             });
         }
 
@@ -143,52 +146,30 @@ app.get("/books/:id", async (req, res, next) => {
 
         if (!book) {
             return res.status(404).json({
-                message: "Book not found"
+                error: "Book not found"
             });
         }
 
         res.status(200).json(book);
-
     } catch (error) {
         next(error);
     }
 });
 
-// VALIDATE BOOK DETAILS
-function validateBook(req, res, next) {
-    const { title, author, price } = req.body || {};
-
-    if (
-        typeof title !== "string" ||
-        !title.trim() ||
-        typeof author !== "string" ||
-        !author.trim() ||
-        typeof price !== "number" ||
-        !Number.isFinite(price) ||
-        price < 0
-    ) {
-        return res.status(400).json({
-            message: "Title, author and valid numeric price are required"
-        });
-    }
-
-    req.bookData = {
-        title: title.trim(),
-        author: author.trim(),
-        price
-    };
-
-    next();
-}
-
-// POST - CREATE BOOK
-app.post("/books", validateBook, async (req, res, next) => {
+// POST /books - Add a new book
+app.post("/books", async (req, res, next) => {
     try {
-        const { title, author, price } = req.bookData;
+        const { title, author, price } = req.body;
+
+        if (!validateBook(title, author, price)) {
+            return res.status(400).json({
+                error: "Please provide valid title, author and price"
+            });
+        }
 
         const result = await run(
             "INSERT INTO books (title, author, price) VALUES (?, ?, ?)",
-            [title, author, price]
+            [title.trim(), author.trim(), Number(price)]
         );
 
         const newBook = await get(
@@ -197,40 +178,47 @@ app.post("/books", validateBook, async (req, res, next) => {
         );
 
         res.status(201).json({
-            message: "Book created successfully",
+            message: "Book added successfully",
             book: newBook
         });
-
     } catch (error) {
         next(error);
     }
 });
 
-// PUT - UPDATE BOOK
-app.put("/books/:id", validateBook, async (req, res, next) => {
+// PUT /books/:id - Update a book
+app.put("/books/:id", async (req, res, next) => {
     try {
         const id = Number(req.params.id);
+        const { title, author, price } = req.body;
 
         if (!Number.isInteger(id) || id <= 0) {
             return res.status(400).json({
-                message: "Invalid book ID"
+                error: "Invalid book ID"
             });
         }
 
-        const { title, author, price } = req.bookData;
+        if (!validateBook(title, author, price)) {
+            return res.status(400).json({
+                error: "Please provide valid title, author and price"
+            });
+        }
 
-        const result = await run(
-            `UPDATE books
-             SET title = ?, author = ?, price = ?
-             WHERE id = ?`,
-            [title, author, price, id]
+        const existingBook = await get(
+            "SELECT * FROM books WHERE id = ?",
+            [id]
         );
 
-        if (result.changes === 0) {
+        if (!existingBook) {
             return res.status(404).json({
-                message: "Book not found"
+                error: "Book not found"
             });
         }
+
+        await run(
+            "UPDATE books SET title = ?, author = ?, price = ? WHERE id = ?",
+            [title.trim(), author.trim(), Number(price), id]
+        );
 
         const updatedBook = await get(
             "SELECT * FROM books WHERE id = ?",
@@ -241,70 +229,69 @@ app.put("/books/:id", validateBook, async (req, res, next) => {
             message: "Book updated successfully",
             book: updatedBook
         });
-
     } catch (error) {
         next(error);
     }
 });
 
-// DELETE - DELETE BOOK
+// DELETE /books/:id - Delete a book
 app.delete("/books/:id", async (req, res, next) => {
     try {
         const id = Number(req.params.id);
 
         if (!Number.isInteger(id) || id <= 0) {
             return res.status(400).json({
-                message: "Invalid book ID"
+                error: "Invalid book ID"
             });
         }
 
-        const result = await run(
+        const existingBook = await get(
+            "SELECT * FROM books WHERE id = ?",
+            [id]
+        );
+
+        if (!existingBook) {
+            return res.status(404).json({
+                error: "Book not found"
+            });
+        }
+
+        await run(
             "DELETE FROM books WHERE id = ?",
             [id]
         );
 
-        if (result.changes === 0) {
-            return res.status(404).json({
-                message: "Book not found"
-            });
-        }
-
         res.status(200).json({
             message: "Book deleted successfully"
         });
-
     } catch (error) {
         next(error);
     }
 });
 
-// HANDLE UNKNOWN ROUTES
+// Handle unknown routes
 app.use((req, res) => {
     res.status(404).json({
-        message: "Route not found"
+        error: "Route not found"
     });
 });
 
-// ERROR HANDLER
-app.use((error, req, res, next) => {
-    console.error(error);
+// Handle errors
+app.use((err, req, res, next) => {
+    console.error(err);
 
-    if (
-        error instanceof SyntaxError &&
-        error.status === 400 &&
-        "body" in error
-    ) {
+    if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
         return res.status(400).json({
-            message: "Invalid JSON format"
+            error: "Invalid JSON format"
         });
     }
 
     res.status(500).json({
-        message: "Internal server error"
+        error: "Internal server error"
     });
 });
 
-// START SERVER AFTER DATABASE INITIALIZATION
+// Start server after database initialization
 const PORT = process.env.PORT || 3000;
 
 dbReady
@@ -312,7 +299,7 @@ dbReady
         console.log("Database connected and initialized");
 
         app.listen(PORT, "0.0.0.0", () => {
-            console.log(`Server running at http://localhost:${PORT}`);
+           console.log("Server running at http://localhost:3000");
         });
     })
     .catch((error) => {

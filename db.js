@@ -1,10 +1,18 @@
+
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
+const fs = require("fs");
 
+// Database location
 const databasePath = path.resolve(
     process.env.DB_PATH || "./books.db"
 );
 
+// Create database directory if it does not exist
+const databaseDirectory = path.dirname(databasePath);
+fs.mkdirSync(databaseDirectory, { recursive: true });
+
+// Connect to SQLite database
 const db = new sqlite3.Database(databasePath);
 
 function run(sql, params = []) {
@@ -46,6 +54,7 @@ function all(sql, params = []) {
     });
 }
 
+// Initialize database
 async function initializeDatabase() {
     await run(`
         CREATE TABLE IF NOT EXISTS books (
@@ -81,8 +90,6 @@ async function initializeDatabase() {
             );
         }
     }
-
-    console.log("Database connected and initialized");
 }
 
 const dbReady = initializeDatabase();
