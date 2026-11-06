@@ -1,216 +1,230 @@
-# 📚 Books REST API
+# BDF LAB 3 – Book Management API
 
-## 📌 Project Overview
+## Project Overview
 
-The **Books REST API** is a backend application developed using Node.js, Express.js, and SQLite. It provides a simple and efficient way to manage book information through RESTful API endpoints.
+This project is a **Book Management REST API** developed using Node.js and SQLite database.
 
-The application allows users to perform CRUD operations (Create, Read, Update, and Delete) on book records. It uses an SQLite database to store and manage book details.
+It allows users to perform CRUD operations (Create, Read, Update, Delete) on books. It also supports searching, sorting, filtering, and pagination using query parameters.
 
-## 🎯 Project Objectives
+**Deployed Application URL:**
 
-- Understand the fundamentals of backend development.
-- Learn how to build RESTful APIs using Express.js.
-- Perform CRUD operations using HTTP methods.
-- Connect a Node.js application with an SQLite database.
-- Test API endpoints using Postman.
-- Understand request handling and HTTP response codes.
+https://bdf-lab-3-production.up.railway.app
 
-## 🛠️ Technologies and Tools
+**GitHub Repository:**
 
-| Technology | Purpose |
-|---|---|
-| Node.js | JavaScript runtime environment |
-| Express.js | Backend web framework |
-| SQLite | Database management |
-| JavaScript | Programming language |
-| Postman | API testing |
-| Visual Studio Code | Code editor |
-| Git & GitHub | Version control and project hosting |
+https://github.com/kiranganji4787-source/BDF-LAB-3
 
-## ✨ Key Features
+---
 
-- **View All Books:** Retrieve all available book records.
-- **View Book by ID:** Get details of a specific book.
-- **Add New Book:** Insert a new book into the database.
-- **Update Book:** Modify existing book information.
-- **Delete Book:** Remove a book from the database.
-- **Database Integration:** Store book records using SQLite.
-- **Input Validation:** Validate incoming book information.
-- **Error Handling:** Handle invalid requests and server errors.
-- **Search and Filtering:** Find books based on supported search and filter options.
-- **Sorting and Pagination:** Organize book results using supported options.
+## API Operations
 
-## 📂 Project Structure
+### 1. Get All Books
 
-```text
-BDF-LAB-3/
-│
-├── app.js
-├── db.js
-├── package.json
-├── package-lock.json
-├── README.md
-├── .gitignore
-└── node_modules/
-```
+- **Method:** GET
+- **Endpoint:** `/books`
+- **URL:** https://bdf-lab-3-production.up.railway.app/books
 
-*Note: `node_modules/` is generated after installing dependencies and should not be uploaded to GitHub.*
+**Explanation:**
 
-## ⚙️ Installation and Setup
+This operation retrieves all books stored in the SQLite database. It displays the available book details, including ID, title, author, and price.
 
-### Step 1: Clone the Repository
+**Expected Result:** Returns a list of all available books.
 
-```bash
-git clone https://github.com/kiranganji4787-source/BDF-LAB-3.git
-```
+### 2. Get Book By ID
 
-### Step 2: Navigate to the Project Folder
+- **Method:** GET
+- **Endpoint:** `/books/:id`
+- **Example URL:** https://bdf-lab-3-production.up.railway.app/books/1
 
-```bash
-cd BDF-LAB-3
-```
+**Explanation:**
 
-### Step 3: Install Dependencies
+This operation retrieves a particular book using its unique ID. The user provides the book ID in the URL, and the API returns the matching book details.
 
-```bash
-npm install
-```
+**Expected Result:** Returns the details of the book with the specified ID.
 
-### Step 4: Start the Application
+### 3. Add Book Using POST
 
-```bash
-npm start
-```
+- **Method:** POST
+- **Endpoint:** `/books`
 
-For development mode:
+**URL:**
+https://bdf-lab-3-production.up.railway.app/books
 
-```bash
-npm run dev
-```
-
-### Step 5: Access the Application
-
-Open your browser and visit:
-
-```text
-http://localhost:3000
-```
-
-The application runs locally on port 3000.
-
-## 🔗 API Endpoints
-
-| HTTP Method | Endpoint | Description |
-|---|---|---|
-| GET | `/` | Display all books |
-| GET | `/books` | Retrieve all books |
-| GET | `/books/:id` | Retrieve a book by ID |
-| POST | `/books` | Add a new book |
-| PUT | `/books/:id` | Update an existing book |
-| DELETE | `/books/:id` | Delete a book |
-
-## 📝 Sample API Requests
-
-### 1. Add a New Book
-
-**Method:** POST
-
-**URL:** `http://localhost:3000/books`
-
-**Request Body:**
+**Request Body (JSON):**
 
 ```json
 {
-  "title": "React JS",
-  "author": "Kiran Kumar",
+  "title": "Java Programming",
+  "author": "James Gosling",
+  "price": 500
+}
+```
+
+**Explanation:**
+
+This operation adds a new book to the database. The user sends book details through the request body using the POST method.
+
+**Expected Result:** A new book is created and stored in the database.
+
+### 4. Sorting in Ascending Order
+
+- **Method:** GET
+- **Endpoint:** `/books?order_by=price&order=asc`
+
+**URL:**
+https://bdf-lab-3-production.up.railway.app/books?order_by=price&order=asc
+
+**Explanation:**
+
+This operation sorts books based on their price in ascending order. It displays books from the lowest price to the highest price.
+
+**Expected Result:** Books are displayed in ascending order of price.
+
+### 5. Offset (Pagination)
+
+- **Method:** GET
+- **Example Endpoint:** `/books?limit=5&offset=5`
+
+**URL:**
+https://bdf-lab-3-production.up.railway.app/books?limit=5&offset=5
+
+**Explanation:**
+
+Offset is used for pagination. The limit specifies the maximum number of books to retrieve, while offset specifies how many records to skip.
+
+For example:
+- `limit=5` retrieves 5 books.
+- `offset=5` skips the first 5 books.
+
+**Expected Result:** Returns the next 5 books after skipping the first 5 records.
+
+### 6. Search Books Using GET
+
+- **Method:** GET
+- **Example Endpoint:** `/books?search_q=Java`
+
+**URL:**
+https://bdf-lab-3-production.up.railway.app/books?search_q=Java
+
+**Explanation:**
+
+This operation searches for books using a search keyword. It checks the book title and returns matching records.
+
+**Expected Result:** Returns books matching the search keyword.
+
+### 7. Book Not Found Using GET
+
+- **Method:** GET
+- **Endpoint:** `/books/:id`
+- **Example URL:** https://bdf-lab-3-production.up.railway.app/books/999999
+
+**Explanation:**
+
+This operation checks what happens when a user requests a book ID that does not exist in the database.
+
+**Expected Result:** Returns a 404 Not Found error with an appropriate error message.
+
+### 8. Delete Book
+
+- **Method:** DELETE
+- **Endpoint:** `/books/:id`
+- **Example URL:** https://bdf-lab-3-production.up.railway.app/books/1
+
+**Explanation:**
+
+This operation deletes a particular book from the database using its unique ID.
+
+**Expected Result:** The selected book is deleted successfully.
+
+### 9. Delete Book Not Found
+
+- **Method:** DELETE
+- **Endpoint:** `/books/:id`
+- **Example URL:** https://bdf-lab-3-production.up.railway.app/books/999999
+
+**Explanation:**
+
+This operation attempts to delete a book using an ID that does not exist in the database.
+
+**Expected Result:** Returns a 404 Not Found error because the requested book does not exist.
+
+### 10. Update Book Using PUT
+
+- **Method:** PUT
+- **Endpoint:** `/books/:id`
+- **Example URL:** https://bdf-lab-3-production.up.railway.app/books/1
+
+**Request Body (JSON):**
+
+```json
+{
+  "title": "Advanced Java",
+  "author": "James Gosling",
   "price": 750
 }
 ```
 
-### 2. Update a Book
+**Explanation:**
 
-**Method:** PUT
+This operation updates the details of an existing book. The user provides the book ID in the URL and the updated details in the request body.
 
-**URL:** `http://localhost:3000/books/1`
+**Expected Result:** The existing book information is updated successfully.
 
-**Request Body:**
+### 11. Update Book Not Found Using PUT
+
+- **Method:** PUT
+- **Endpoint:** `/books/:id`
+- **Example URL:** https://bdf-lab-3-production.up.railway.app/books/999999
+
+**Request Body (JSON):**
 
 ```json
 {
-  "title": "Advanced JavaScript",
-  "author": "John Smith",
-  "price": 850
+  "title": "Python Programming",
+  "author": "Guido van Rossum",
+  "price": 600
 }
 ```
 
-*Use an existing book ID when testing.*
+**Explanation:**
 
-### 3. Delete a Book
+This operation attempts to update a book using an ID that does not exist in the database.
 
-**Method:** DELETE
+**Expected Result:** Returns a 404 Not Found error because the requested book does not exist.
 
-**URL:** `http://localhost:3000/books/1`
+---
 
-*Replace `1` with the ID of the book you want to delete.*
+## Technologies Used
 
-## 🧪 API Testing
+- Node.js – Backend runtime environment.
+- Express.js – Framework for building REST APIs.
+- SQLite – Database for storing book records.
+- Postman – Used for API testing.
+- Git and GitHub – Used for version control and code hosting.
+- Railway – Used for application deployment.
 
-The API endpoints were tested using **Postman**.
+## Database Structure
 
-The following operations were tested:
+The project uses an SQLite database with the following table structure:
 
-- GET request to retrieve all books.
-- GET request to retrieve a specific book.
-- POST request to insert a new book.
-- PUT request to update book details.
-- DELETE request to remove a book.
+| Column | Data Type | Description |
+|---|---|---|
+| id | INTEGER | Unique book ID |
+| title | TEXT | Book title |
+| author | TEXT | Book author |
+| price | REAL | Book price |
 
-## 🗄️ Database Details
+## HTTP Methods Used
 
-The application uses SQLite as its database.
-
-The `books` table stores the following information:
-
-| Field | Description |
+| Method | Purpose |
 |---|---|
-| id | Unique identifier for each book |
-| title | Name of the book |
-| author | Name of the book's author |
-| price | Price of the book |
+| GET | Retrieve book information |
+| POST | Add a new book |
+| PUT | Update an existing book |
+| DELETE | Delete a book |
 
-The database table is initialized automatically when the application starts.
+## Conclusion
 
-## 🔐 Error Handling
+The Book Management API demonstrates the implementation of REST API operations using Node.js, Express.js, and SQLite.
 
-The application handles common API errors, including:
-
-- Invalid book ID.
-- Book not found.
-- Missing or invalid input fields.
-- Invalid API routes.
-- Internal server errors.
-
-## 📖 Learning Outcomes
-
-Through this project, the following concepts were practiced:
-
-1. Creating a backend server using Node.js.
-2. Building REST APIs with Express.js.
-3. Understanding HTTP methods and status codes.
-4. Connecting and interacting with an SQLite database.
-5. Implementing CRUD operations.
-6. Testing APIs using Postman.
-7. Managing project versions using Git and GitHub.
-
-## 🚀 Future Enhancements
-
-- Add user authentication and authorization.
-- Implement advanced book search.
-- Add book categories and ratings.
-- Create a frontend interface.
-- Deploy the application to a cloud platform.
-- Add automated API testing.
-
-## 📄 License
-
-This project is created for educational and learning purposes.
+It supports retrieving, adding, updating, deleting, searching, sorting, filtering, and pagination of book records. All API operations were tested using Postman and the application was deployed on Railway.
